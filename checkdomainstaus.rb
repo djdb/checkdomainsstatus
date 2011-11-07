@@ -4,10 +4,10 @@ require 'resolv'
 require 'net/http'
 require 'logger'
 
-THREADS =	4 # Количество потоков программы
+THREADS =	16 # Количество потоков программы
 
 @@log = Logger.new(STDOUT)
-@@log.level = Logger::DEBUG
+@@log.level = Logger::INFO
 @@log.datetime_format = "%Y-%m-%d %H:%M:%S"
 
 @@log.info("Старт программы")
@@ -51,7 +51,7 @@ class Domain
 	return mx
 	end
 
-    def has_web_server?
+	def has_web_server?
 	# Возвращает true если веб-сервер хоста отвечает (коды в регулярном выражении), либо false если сервер недоступен либо отдает другой код ответа
 	log.debug("#{Thread.current[:name]} : Вызов has_web_server? для домена #{fqdn}")
 		answer = false
