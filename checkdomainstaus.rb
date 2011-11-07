@@ -62,7 +62,7 @@ class Domain
 			return false
 		end
 		return answer = true if res.code =~ /200|301|302|404|403|502|503|504/
-    end
+	end
 end # class Domain
 
 # Читаем домены из файла и закидываем в массив
