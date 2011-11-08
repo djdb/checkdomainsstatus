@@ -61,7 +61,7 @@ class Domain
 			log.warn("#{Thread.current[:name]} : Что-то пошло не так во время проведения HTTP-запроса к http://#{fqdn}/ : #{ex.class}: #{ex.message}")
 			return false
 		end
-		return answer = true if res.code =~ /200|301|302|404|403|502|503|504/
+		return answer = true if res.code =~ /200|301|302/
 	end
 end # class Domain
 
