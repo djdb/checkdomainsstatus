@@ -15,17 +15,15 @@ mutex = Mutex.new
 
 class Domain
 	attr_accessor :fqdn
-	attr_accessor :log
 
 	def initialize(fqdn)
 	# Инициализация класса
 		@fqdn = fqdn
-		@log = $log
 	end
 
 	def get_a_record_ip
 	# Возвращает IP адреса (A-записи) домена, либо nil если адресов нет
-	log.debug("#{Thread.current[:name]} : Вызов get_a_record_ip для домена #{fqdn}")
+	$log.debug("#{Thread.current[:name]} : Вызов get_a_record_ip для домена #{fqdn}")
 		a = nil
 		Resolv::DNS.open do |dns|
 			a_records = dns.getresources(fqdn, Resolv::DNS::Resource::IN::A)
@@ -39,7 +37,7 @@ class Domain
 
 	def get_mx_record_ip
 	# Возвращает адреса почтовиков, обслуживающих домен (MX записи), либо nil если адресов нет
-	log.debug("#{Thread.current[:name]} : Вызов get_mx_record_ip для домена #{fqdn}")
+	$log.debug("#{Thread.current[:name]} : Вызов get_mx_record_ip для домена #{fqdn}")
 		mx = nil
 		Resolv::DNS.open do |dns|
 			mx_records = dns.getresources(fqdn, Resolv::DNS::Resource::IN::MX)
@@ -53,12 +51,12 @@ class Domain
 
 	def has_web_server?
 	# Возвращает true если веб-сервер хоста отвечает (коды в регулярном выражении), либо false если сервер недоступен либо отдает другой код ответа
-	log.debug("#{Thread.current[:name]} : Вызов has_web_server? для домена #{fqdn}")
+	$log.debug("#{Thread.current[:name]} : Вызов has_web_server? для домена #{fqdn}")
 		answer = false
 		begin
 			res = Net::HTTP.get_response(URI("http://" + fqdn + "/"))
 			rescue => ex
-			log.warn("#{Thread.current[:name]} : Что-то пошло не так во время проведения HTTP-запроса к http://#{fqdn}/ : #{ex.class}: #{ex.message}")
+			$log.warn("#{Thread.current[:name]} : Что-то пошло не так во время проведения HTTP-запроса к http://#{fqdn}/ : #{ex.class}: #{ex.message}")
 			return false
 		end
 		return answer = true if res.code =~ /200|301|302/
