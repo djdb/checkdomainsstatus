@@ -6,11 +6,11 @@ require 'logger'
 
 THREADS =	16 # Количество потоков программы
 
-@@log = Logger.new(STDOUT)
-@@log.level = Logger::INFO
-@@log.datetime_format = "%Y-%m-%d %H:%M:%S"
+$log = Logger.new(STDOUT)
+$log.level = Logger::DEBUG
+$log.datetime_format = "%Y-%m-%d %H:%M:%S"
 
-@@log.info("Старт программы")
+$log.info("Старт программы")
 mutex = Mutex.new
 
 class Domain
@@ -20,7 +20,7 @@ class Domain
 	def initialize(fqdn)
 	# Инициализация класса
 		@fqdn = fqdn
-		@log = @@log
+		@log = $log
 	end
 
 	def get_a_record_ip
@@ -66,33 +66,33 @@ class Domain
 end # class Domain
 
 # Читаем домены из файла и закидываем в массив
-@@log.fatal("Не найден файл domains.txt рядом со скриптом! Остановка программы") and exit if not File.exist?("domains.txt")
+$log.fatal("Не найден файл domains.txt рядом со скриптом! Остановка программы") and exit if not File.exist?("domains.txt")
 domains = []
 begin
 	File.open("domains.txt","r").each {|line| domains << line.chomp}
 	rescue => ex
-	@@log.fatal("Что-то пошло не так при чтении файла domains.txt : #{ex.class}: #{ex.message}")
-	@@log.fatal("Остановка программы")
+	$log.fatal("Что-то пошло не так при чтении файла domains.txt : #{ex.class}: #{ex.message}")
+	$log.fatal("Остановка программы")
 	exit
 end
 domains.uniq!
-@@log.debug("Из файла прочитано #{domains.count} доменов")
+$log.debug("Из файла прочитано #{domains.count} доменов")
 
 # Решаем, по сколько доменов обработает каждый тред
 threadjobs = []
 (0..THREADS-1).each {|tn| threadjobs[tn] = domains.count / THREADS}
 threadjobs[THREADS-1] += domains.count % THREADS
-@@log.debug("Распределение заданий по thread'ам: #{threadjobs}")
+$log.debug("Распределение заданий по thread'ам: #{threadjobs}")
 
 # Процедура получения нужной информации для каждого треда
 
 def process_domains(array, dom_start, dom_end)
-	@@log.debug("#{Thread.current[:name]} : process_domains() запущен в треде #{Thread.current} : #{Thread.inspect}")
+	$log.debug("#{Thread.current[:name]} : process_domains() запущен в треде #{Thread.current} : #{Thread.inspect}")
 	local_has_a = 0
 	local_has_a_www = 0
 	local_has_a_www_mx = 0
 	(dom_start..dom_end).each do |domnr|
-		@@log.debug("#{Thread.current[:name]} : Обработка домена #{array[domnr]}")
+		$log.debug("#{Thread.current[:name]} : Обработка домена #{array[domnr]}")
 		d = Domain.new(array[domnr])
 		hasa = false
 		hasawww = false
@@ -114,7 +114,7 @@ t = []
 threadjobs.each do |tj|
 	st = dcount
 	en = st + tj - 1
-	@@log.debug("Поток №#{tn} обработает #{tj} домена(ов): c #{st} по #{en}")
+	$log.debug("Поток №#{tn} обработает #{tj} домена(ов): c #{st} по #{en}")
 	t[tn] = Thread.new {
 		Thread.current[:name]  = "Thread " << st.to_s << ".." << en.to_s
 		pd = process_domains(domains, st, en)
@@ -137,4 +137,4 @@ puts " #{has_a_www} доменов имеют запись A и веб-стра�
 puts " #{has_a_www_mx} доменов имеют запись A, веб-страницу и почтовую запись MX"
 puts "--------------------------------------------------------------------------------------"
 
-@@log.info("Завершение программы")
+$log.info("Завершение программы")
