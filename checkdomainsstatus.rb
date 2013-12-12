@@ -1,4 +1,4 @@
-#!/home/digitalboy/.rvm/rubies/ruby-1.9.3-p194/bin/ruby
+#!/usr/bin/ruby
 # Encoding : utf-8
 require 'resolv'
 require 'net/http'
