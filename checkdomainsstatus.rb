@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/home/digitalboy/.rvm/rubies/ruby-1.9.3-p194/bin/ruby
 # Encoding : utf-8
 require 'resolv'
 require 'net/http'
@@ -26,10 +26,16 @@ class Domain
 	$log.debug("#{Thread.current[:name]} : Вызов get_a_record_ip для домена #{fqdn}")
 		a = nil
 		Resolv::DNS.open do |dns|
-			a_records = dns.getresources(fqdn, Resolv::DNS::Resource::IN::A)
-			a = [] if not a_records.empty?
-			a_records.each do |record|
-				a << record.address
+			begin
+				a_records = dns.getresources(fqdn, Resolv::DNS::Resource::IN::A)
+				rescue => ex
+				$log.warn("#{Thread.current[:name]} : Вызов dns.getresources (A) для домена #{fqdn} завершился с исключением: #{ex.class}: #{ex.message}")
+			end
+			if not a_records.nil? then
+				a = [] if not a_records.empty?
+				a_records.each do |record|
+					a << record.address
+				end
 			end
 		end	
 	return a
@@ -40,10 +46,16 @@ class Domain
 	$log.debug("#{Thread.current[:name]} : Вызов get_mx_record_ip для домена #{fqdn}")
 		mx = nil
 		Resolv::DNS.open do |dns|
-			mx_records = dns.getresources(fqdn, Resolv::DNS::Resource::IN::MX)
-			mx = [] if not mx_records.empty?
-			mx_records.each do |record|
-				mx << record.exchange.to_s
+			begin
+				mx_records = dns.getresources(fqdn, Resolv::DNS::Resource::IN::MX)
+				rescue => ex
+				$log.warn("#{Thread.current[:name]} : Вызов dns.getresources (MX) для домена #{fqdn} завершился с исключением: #{ex.class}: #{ex.message}")
+			end
+			if not mx_records.nil? then
+				mx = [] if not mx_records.empty?
+				mx_records.each do |record|
+					mx << record.exchange.to_s
+				end
 			end
 		end
 	return mx
@@ -67,7 +79,7 @@ end # class Domain
 $log.fatal("Не найден файл domains.txt рядом со скриптом! Остановка программы") and exit if not File.exist?("domains.txt")
 domains = []
 begin
-	File.open("domains.txt","r").each {|line| domains << line.chomp}
+	File.open("domains.txt","r").each {|line| domains << line.chomp.force_encoding('UTF-8')}
 	rescue => ex
 	$log.fatal("Что-то пошло не так при чтении файла domains.txt : #{ex.class}: #{ex.message}")
 	$log.fatal("Остановка программы")
