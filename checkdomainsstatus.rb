@@ -8,9 +8,9 @@ THREADS =	16 # Количество потоков программы
 
 $log = Logger.new(STDOUT)
 $log.level = Logger::INFO
-$log.datetime_format = "%Y-%m-%d %H:%M:%S"
+$log.datetime_format = '%Y-%m-%d %H:%M:%S'
 
-$log.info("Старт программы")
+$log.info('Старт программы')
 mutex = Mutex.new
 
 class Domain
@@ -31,14 +31,14 @@ class Domain
 				rescue => ex
 				$log.warn("#{Thread.current[:name]} : Вызов dns.getresources (A) для домена #{fqdn} завершился с исключением: #{ex.class}: #{ex.message}")
 			end
-			if not a_records.nil? then
-				a = [] if not a_records.empty?
+			unless a_records.nil?
+				a = [] unless a_records.empty?
 				a_records.each do |record|
 					a << record.address
 				end
 			end
 		end	
-	return a
+	a
 	end
 
 	def get_mx_record_ip
@@ -51,38 +51,39 @@ class Domain
 				rescue => ex
 				$log.warn("#{Thread.current[:name]} : Вызов dns.getresources (MX) для домена #{fqdn} завершился с исключением: #{ex.class}: #{ex.message}")
 			end
-			if not mx_records.nil? then
-				mx = [] if not mx_records.empty?
+			unless mx_records.nil?
+				mx = [] unless mx_records.empty?
 				mx_records.each do |record|
 					mx << record.exchange.to_s
 				end
 			end
 		end
-	return mx
+	mx
 	end
 
 	def has_web_server?
 	# Возвращает true если веб-сервер хоста отвечает (коды в регулярном выражении), либо false если сервер недоступен либо отдает другой код ответа
 	$log.debug("#{Thread.current[:name]} : Вызов has_web_server? для домена #{fqdn}")
-		answer = false
+		@answer = false
 		begin
-			res = Net::HTTP.get_response(URI("http://" + fqdn + "/"))
+			res = Net::HTTP.get_response(URI('http://' + fqdn + '/'))
 			rescue => ex
 			$log.warn("#{Thread.current[:name]} : Что-то пошло не так во время проведения HTTP-запроса к http://#{fqdn}/ : #{ex.class}: #{ex.message}")
 			return false
 		end
-		return answer = true if res.code =~ /200|301|302/
-	end
+		@answer = true if res.code =~ /200|301|302/
+  end
+
 end # class Domain
 
 # Читаем домены из файла и закидываем в массив
-$log.fatal("Не найден файл domains.txt рядом со скриптом! Остановка программы") and exit if not File.exist?("domains.txt")
+$log.fatal('Не найден файл domains.txt рядом со скриптом! Остановка программы') and exit unless File.exist?('domains.txt')
 domains = []
 begin
-	File.open("domains.txt","r").each {|line| domains << line.chomp.force_encoding('UTF-8')}
+	File.open('domains.txt','r').each {|line| domains << line.chomp.force_encoding('UTF-8')}
 	rescue => ex
 	$log.fatal("Что-то пошло не так при чтении файла domains.txt : #{ex.class}: #{ex.message}")
-	$log.fatal("Остановка программы")
+	$log.fatal('Остановка программы')
 	exit
 end
 domains.uniq!
@@ -104,11 +105,11 @@ def process_domains(array, dom_start, dom_end)
 	(dom_start..dom_end).each do |domnr|
 		$log.debug("#{Thread.current[:name]} : Обработка домена #{array[domnr]}")
 		d = Domain.new(array[domnr])
-		hasa = false
-		hasawww = false
-		local_has_a += 1 and hasa = true if not d.get_a_record_ip.nil?
-		local_has_a_www += 1 and hasawww = true if hasa and d.has_web_server?
-		local_has_a_www_mx += 1 if hasa and hasawww and not d.get_mx_record_ip.nil?
+		@hasa = false
+		@hasawww = false
+		local_has_a += 1 and @hasa = true unless d.get_a_record_ip.nil?
+		local_has_a_www += 1 and @hasawww = true if @hasa and d.has_web_server?
+		local_has_a_www_mx += 1 if @hasa and @hasawww and not d.get_mx_record_ip.nil?
 	end
 	return local_has_a, local_has_a_www, local_has_a_www_mx
 end
@@ -126,7 +127,7 @@ threadjobs.each do |tj|
 	en = st + tj - 1
 	$log.debug("Поток №#{tn} обработает #{tj} домена(ов): c #{st} по #{en}")
 	t[tn] = Thread.new {
-		Thread.current[:name]  = "Thread " << st.to_s << ".." << en.to_s
+		Thread.current[:name]  = 'Thread ' << st.to_s << '..' << en.to_s
 		pd = process_domains(domains, st, en)
 		mutex.synchronize {
 			has_a += pd[0]
@@ -140,11 +141,11 @@ end
 (0..tn-1).each {|trj| t[trj].join}
 
 # Вывод результатов на экран
-puts "--------------------------------------------------------------------------------------"
+puts '--------------------------------------------------------------------------------------'
 puts "#{domains.count} доменов обработано, из них:"
 puts " #{has_a} доменов имеют запись A"
 puts " #{has_a_www} доменов имеют запись A и веб-страницу"
 puts " #{has_a_www_mx} доменов имеют запись A, веб-страницу и почтовую запись MX"
-puts "--------------------------------------------------------------------------------------"
+puts '--------------------------------------------------------------------------------------'
 
-$log.info("Завершение программы")
+$log.info('Завершение программы')
