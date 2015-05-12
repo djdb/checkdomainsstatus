@@ -6,7 +6,7 @@ require 'logger'
 
 THREADS =	16 # Количество потоков программы
 
-$log = Logger.new(STDOUT)
+$log = Logger.new(STDERR)
 $log.level = Logger::INFO
 $log.datetime_format = '%Y-%m-%d %H:%M:%S'
 
